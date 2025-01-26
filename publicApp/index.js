@@ -4,7 +4,8 @@ const request = require('request-promise-native');
 const NodeCache = require('node-cache');
 const session = require('express-session');
 //const open = require('open');
-const { default: open } = require('open');
+const open = require('open').default
+//const { default: open } = require('open');
 const app = express();
 
 const PORT = 3000;
@@ -209,7 +210,7 @@ app.get('/error', (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`=== Starting your app on http://localhost:${PORT} ===`));
-// await opn(`http://localhost:${PORT}`);
-(async () => {
-    await open(`http://localhost:${PORT}`);
-})();
+open(`http://localhost:${PORT}`);
+//(async () => {
+//    await open(`http://localhost:${PORT}`);
+//})();
