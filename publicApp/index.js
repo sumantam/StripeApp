@@ -3,8 +3,8 @@ const express = require('express');
 const request = require('request-promise-native');
 const NodeCache = require('node-cache');
 const session = require('express-session');
-//const open = require('open');
-const open = require('open').default
+const open = require('open');
+//const open = require('open').default
 //const { default: open } = require('open');
 const app = express();
 
