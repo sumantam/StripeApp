@@ -27,13 +27,12 @@ console.log(' ');
 
 // Scopes for this app will default to `crm.objects.contacts.read`
 // To request others, set the SCOPE environment variable instead
-let SCOPES = ['crm.objects.deals.read,crm.objects.deals.write,crm.objects.contacts.read'];
+//let SCOPES = ['crm.objects.deals.read,crm.objects.deals.write,crm.objects.contacts.read'];
+let SCOPES=[];
 if (process.env.SCOPE) {
     SCOPES = (process.env.SCOPE.split(/ |, ?|%20/)).join(' ');
 }
 
-console.log('The scopes is' , SCOPES)
-console.log('');
 
 // On successful install, users will be redirected to /oauth-callback
 
@@ -61,7 +60,6 @@ app.use(session({
 app.get('/install', (req, res) => {
   console.log('');
   console.log('=== Initiating OAuth 2.0 flow with HubSpot ===');
-  console.log(req);
   const publicIp = req.headers['host'].split(':')[0]; // To remove the port if present
   console.log('Public IP of the EC2 instance:', publicIp);
 
@@ -77,6 +75,7 @@ app.get('/install', (req, res) => {
 
   REDIRECT_URI = `https://${publicIp}:${PORT}/oauth-callback`;
   console.log('');
+  console.log("Scopes =====>", SCOPES);
   console.log("===> Step 1: Redirecting user to your app's OAuth URL");
   const authUrl =
  	 'https://app.hubspot.com/oauth/authorize' +
