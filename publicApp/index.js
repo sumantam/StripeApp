@@ -8,7 +8,6 @@ const os = require('os');
 //const open = require('open').default
 //const { default: open } = require('open');
 const app = express();
-
 const PORT = 3000;
 
 const refreshTokenStore = {};
@@ -21,6 +20,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 //const REDIRECT_MACHINE = process.env.CLIENT_MACHINE
 const hostname = os.hostname();
+app.set('trust proxy', 1); 
 
 console.log('The HostName is ' , hostname);
 console.log(' ');
@@ -62,13 +62,20 @@ app.get('/install', (req, res) => {
   console.log('');
   console.log('=== Initiating OAuth 2.0 flow with HubSpot ===');
   console.log(req);
-  const ip = (req.headers && req.headers['x-forwarded-for'])
-            || req.ip 
-            || req._remoteAddress 
-            || (req.connection && req.connection.remoteAddress);
-  console.log('IP ADDRESS =========>', ip);
+  const publicIp = req.headers['host'].split(':')[0]; // To remove the port if present
+  console.log('Public IP of the EC2 instance:', publicIp);
 
-  REDIRECT_URI = `http://${ip}:${PORT}/oauth-callback`;
+  //const ip = (req.headers && req.headers['x-forwarded-for'])
+  //          || req.ip 
+  //          || req._remoteAddress 
+  //          || (req.connection && req.connection.remoteAddress);
+  // console.log('headers ADDRESS =========>', req.headers);
+  // console.log('IP ADDRESS =========>', req.ip);
+  // console.log('remote  ADDRESS =========>', req._remoteAddress);
+  // console.log('connection  =========>', req.connection);
+  // console.log('IP ADDRESS =========>', ip);
+
+  REDIRECT_URI = `https://${publicIp}:${PORT}/oauth-callback`;
   console.log('');
   console.log("===> Step 1: Redirecting user to your app's OAuth URL");
   const authUrl =
