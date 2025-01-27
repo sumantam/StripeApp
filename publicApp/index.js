@@ -5,6 +5,8 @@ const NodeCache = require('node-cache');
 const session = require('express-session');
 const open = require('open');
 const os = require('os');
+const fs = require('fs');
+const https = require('https');
 //const open = require('open').default
 //const { default: open } = require('open');
 const app = express();
@@ -99,29 +101,29 @@ app.get('/oauth-callback', async (req, res) => {
 
   // Received a user authorization code, so now combine that with the other
   // required values and exchange both for an access token and a refresh token
-  if (req.query.code) {
-    console.log('       > Received an authorization token');
-
-    const authCodeProof = {
-      grant_type: 'authorization_code',
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      redirect_uri: REDIRECT_URI,
-      code: req.query.code
-    };
-
-    // Step 4
-    // Exchange the authorization code for an access token and refresh token
-    console.log('===> Step 4: Exchanging authorization code for an access token and refresh token');
-    const token = await exchangeForTokens(req.sessionID, authCodeProof);
-    if (token.message) {
-      return res.redirect(`/error?msg=${token.message}`);
-    }
-
-    // Once the tokens have been retrieved, use them to make a query
-    // to the HubSpot API
-    res.redirect(`/`);
-  }
+//  if (req.query.code) {
+//    console.log('       > Received an authorization token');
+//
+//    const authCodeProof = {
+//      grant_type: 'authorization_code',
+//      client_id: CLIENT_ID,
+//      client_secret: CLIENT_SECRET,
+//      redirect_uri: REDIRECT_URI,
+//      code: req.query.code
+//    };
+//
+//    // Step 4
+//    // Exchange the authorization code for an access token and refresh token
+//    console.log('===> Step 4: Exchanging authorization code for an access token and refresh token');
+//    const token = await exchangeForTokens(req.sessionID, authCodeProof);
+//    if (token.message) {
+//      return res.redirect(`/error?msg=${token.message}`);
+//    }
+//
+//    // Once the tokens have been retrieved, use them to make a query
+//    // to the HubSpot API
+//    res.redirect(`/`);
+//  }
 });
 
 //==========================================//
@@ -230,8 +232,21 @@ app.get('/error', (req, res) => {
   res.end();
 });
 
-app.listen(PORT, () => console.log(`=== Starting your app on http://localhost:${PORT} ===`));
-open(`http://localhost:${PORT}`);
+// Define paths to your SSL certificate and private key (adjust the paths if you're using Let's Encrypt or self-signed cert)
+const options = {
+  key: fs.readFileSync('/etc/ssl/private/stripeapp.key'),
+  cert: fs.readFileSync('/etc/ssl/certs/stripeapp.crt'),
+  //ca: fs.readFileSync('/etc/ssl/certs/yourdomain-chain.crt'),  // Only needed if using an intermediate CA
+};
+
+// Start the HTTPS server instead of the HTTP one
+https.createServer(options, app).listen(PORT, () => {
+  console.log(`=== Starting your app on https://localhost:${PORT} ===`);
+  open(`https://localhost:${PORT}`);  // Automatically open in the browser
+});
+
+//app.listen(PORT, () => console.log(`=== Starting your app on http://localhost:${PORT} ===`));
+//open(`http://localhost:${PORT}`);
 //(async () => {
 //    await open(`http://localhost:${PORT}`);
 //})();
