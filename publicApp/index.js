@@ -4,6 +4,7 @@ const request = require('request-promise-native');
 const NodeCache = require('node-cache');
 const session = require('express-session');
 const open = require('open');
+const os = require('os');
 //const open = require('open').default
 //const { default: open } = require('open');
 const app = express();
@@ -18,6 +19,11 @@ if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
 }
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
+//const REDIRECT_MACHINE = process.env.CLIENT_MACHINE
+const hostname = os.hostname();
+
+console.log('The HostName is ' , hostname);
+console.log(' ');
 
 // Scopes for this app will default to `crm.objects.contacts.read`
 // To request others, set the SCOPE environment variable instead
@@ -30,7 +36,8 @@ console.log('The scopes is' , SCOPES)
 console.log('');
 
 // On successful install, users will be redirected to /oauth-callback
-const REDIRECT_URI = `http://localhost:${PORT}/oauth-callback`;
+
+var REDIRECT_URI = `http://localhost:${PORT}/oauth-callback`;
 
 //===========================================================================//
 
@@ -48,19 +55,27 @@ app.use(session({
 // Step 1
 // Build the authorization URL to redirect a user
 // to when they choose to install the app
-const authUrl =
-  'https://app.hubspot.com/oauth/authorize' +
-  `?client_id=${encodeURIComponent(CLIENT_ID)}` + // app's client ID
-  `&scope=${encodeURIComponent(SCOPES)}` + // scopes being requested by the app
-  `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; // where to send the user after the consent page
 
 // Redirect the user from the installation page to
 // the authorization URL
 app.get('/install', (req, res) => {
   console.log('');
   console.log('=== Initiating OAuth 2.0 flow with HubSpot ===');
+  console.log(req);
+  const ip = (req.headers && req.headers['x-forwarded-for'])
+            || req.ip 
+            || req._remoteAddress 
+            || (req.connection && req.connection.remoteAddress);
+  console.log('IP ADDRESS =========>', ip);
+
+  REDIRECT_URI = `http://${ip}:${PORT}/oauth-callback`;
   console.log('');
   console.log("===> Step 1: Redirecting user to your app's OAuth URL");
+  const authUrl =
+ 	 'https://app.hubspot.com/oauth/authorize' +
+  	`?client_id=${encodeURIComponent(CLIENT_ID)}` + // app's client ID
+  	`&scope=${encodeURIComponent(SCOPES)}` + // scopes being requested by the app
+  	`&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; // where to send the user after the consent page
   res.redirect(authUrl);
   console.log('===> Step 2: User is being prompted for consent by HubSpot');
 });
