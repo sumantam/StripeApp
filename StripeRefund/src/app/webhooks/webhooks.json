@@ -1,0 +1,22 @@
+{
+  "settings": {
+    "targetUrl": "https://efa2f8ef-1875-4b83-9bf6-8ea2f8884bbc.trayapp.io",
+    "maxConcurrentRequests": 10
+  },
+  "subscriptions": {
+    "crmObjects": [
+      {
+        "subscriptionType": "object.propertyChange",
+        "objectName": "deal",
+        "propertyName": "submit_refund_status",
+        "active": true
+      },
+     {
+        "subscriptionType": "object.propertyChange",
+        "objectName": "deal",
+        "propertyName": "refundamount",
+        "active": true
+      }
+    ]
+  }
+}
