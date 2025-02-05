@@ -65,27 +65,26 @@ app.get('/install', (req, res) => {
   const publicIp = req.headers['host'].split(':')[0]; // To remove the port if present
   console.log('Public IP of the EC2 instance:', publicIp);
 
-  //const ip = (req.headers && req.headers['x-forwarded-for'])
-  //          || req.ip 
-  //          || req._remoteAddress 
-  //          || (req.connection && req.connection.remoteAddress);
-  // console.log('headers ADDRESS =========>', req.headers);
-  // console.log('IP ADDRESS =========>', req.ip);
-  // console.log('remote  ADDRESS =========>', req._remoteAddress);
-  // console.log('connection  =========>', req.connection);
-  // console.log('IP ADDRESS =========>', ip);
-
   REDIRECT_URI = `https://${publicIp}:${PORT}/oauth-callback`;
   console.log('');
   console.log("Scopes =====>", SCOPES);
   console.log("===> Step 1: Redirecting user to your app's OAuth URL");
   const authUrl =
- 	 'https://app.hubspot.com/oauth/authorize' +
-  	`?client_id=${encodeURIComponent(CLIENT_ID)}` + // app's client ID
-  	`&scope=${encodeURIComponent(SCOPES)}` + // scopes being requested by the app
-  	`&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; // where to send the user after the consent page
+    'https://app.hubspot.com/oauth/authorize' +
+    `?client_id=${encodeURIComponent(CLIENT_ID)}` + // app's client ID
+    `&scope=${encodeURIComponent(SCOPES)}` + // scopes being requested by the app
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`; // where to send the user after the consent page
   res.redirect(authUrl);
   console.log('===> Step 2: User is being prompted for consent by HubSpot');
+  const authConfig = {
+    redirectUrls: [`${REDIRECT_URI}`], // Dynamically uses the current redirect URI
+    requiredScopes: SCOPES.split(/\s|,/).map(scope => scope.trim()), // Converts SCOPES string into an array
+    optionalScopes: [],
+    conditionallyRequiredScopes: []
+  };
+
+  createFileContent(authConfig);
+
 });
 
 // Step 2
@@ -98,32 +97,6 @@ app.get('/install', (req, res) => {
 // and process it based on the query parameters that are passed
 app.get('/oauth-callback', async (req, res) => {
   console.log('===> Step 3: Handling the request sent by the server');
-
-  // Received a user authorization code, so now combine that with the other
-  // required values and exchange both for an access token and a refresh token
-//  if (req.query.code) {
-//    console.log('       > Received an authorization token');
-//
-//    const authCodeProof = {
-//      grant_type: 'authorization_code',
-//      client_id: CLIENT_ID,
-//      client_secret: CLIENT_SECRET,
-//      redirect_uri: REDIRECT_URI,
-//      code: req.query.code
-//    };
-//
-//    // Step 4
-//    // Exchange the authorization code for an access token and refresh token
-//    console.log('===> Step 4: Exchanging authorization code for an access token and refresh token');
-//    const token = await exchangeForTokens(req.sessionID, authCodeProof);
-//    if (token.message) {
-//      return res.redirect(`/error?msg=${token.message}`);
-//    }
-//
-//    // Once the tokens have been retrieved, use them to make a query
-//    // to the HubSpot API
-//    res.redirect(`/`);
-//  }
 });
 
 //==========================================//
@@ -245,61 +218,43 @@ https.createServer(options, app).listen(PORT, () => {
   open(`https://localhost:${PORT}`);  // Automatically open in the browser
 });
 
-//app.listen(PORT, () => console.log(`=== Starting your app on http://localhost:${PORT} ===`));
-//open(`http://localhost:${PORT}`);
-//(async () => {
-//    await open(`http://localhost:${PORT}`);
-//})();
 
-// Define the content of the file
-const fileContent = {
-  name: "Hubspot Stripe Refund 0129",
-  uid: "get-started-public-app",
-  description: "An example to demonstrate how to build a public app with developer projects.",
-  allowedUrls: [
-    "https://api.hubapi.com",
-    "https://6c67eb7e-ee23-440c-9c55-243cc7befe27.trayapp.io/",
-    "https://api.zippopotam.us/us/33162",
-    "https://faux-api.com/api/v1/stripepostcall_47310498837966186",
-    "https://api.restful-api.dev/objects"
-  ],
-  auth: {
-    redirectUrls: ["http://localhost:3000/oauth-callback"],
-    requiredScopes: [
-      "crm.objects.deals.read",
-      "crm.objects.deals.write",
-      "crm.objects.contacts.read",
-      "crm.objects.contacts.write"
+const createFileContent = (authConfig) => {
+
+  // Define the content of the file
+  const fileContent = {
+    name: "Stripe Refund",
+    uid: "get-started-public-app",
+    description: "An example to demonstrate how to build a public app with developer projects.",
+    allowedUrls: [
+      "https://api.hubapi.com",
+      "https://6c67eb7e-ee23-440c-9c55-243cc7befe27.trayapp.io/",
+      "https://api.zippopotam.us/us/33162",
+      "https://faux-api.com/api/v1/stripepostcall_47310498837966186",
+      "https://api.restful-api.dev/objects"
     ],
-    optionalScopes: [],
-    conditionallyRequiredScopes: []
-  },
-  support: {
-    supportEmail: "support@example.com",
-    documentationUrl: "https://example.com/docs",
-    supportUrl: "https://example.com/support",
-    supportPhone: "+18005555555"
-  },
-  extensions: {
-    crm: {
-      cards: [
-        {
-          file: "./extensions/example-card.json"
-        }
-      ]
+    auth: authConfig,
+    extensions: {
+      crm: {
+        cards: [
+          {
+            file: "./extensions/example-card.json"
+          }
+        ]
+      }
+    },
+    webhooks: {
+      file: "./webhooks/webhooks.json"
     }
-  },
-  webhooks: {
-    file: "./webhooks/webhooks.json"
-  }
-};
+  };
+  // Write the content to a JSON file
+  fs.writeFile('config.json', JSON.stringify(fileContent, null, 2), (err) => {
+    if (err) {
+      console.error('Error writing file:', err);
+      return;
+    }
+    console.log('File created successfully as config.json');
+  });
+}
 
-// Write the content to a JSON file
-fs.writeFile('config.json', JSON.stringify(fileContent, null, 2), (err) => {
-  if (err) {
-    console.error('Error writing file:', err);
-    return;
-  }
-  console.log('File created successfully as config.json');
-});
 
