@@ -250,3 +250,56 @@ https.createServer(options, app).listen(PORT, () => {
 //(async () => {
 //    await open(`http://localhost:${PORT}`);
 //})();
+
+// Define the content of the file
+const fileContent = {
+  name: "Hubspot Stripe Refund 0129",
+  uid: "get-started-public-app",
+  description: "An example to demonstrate how to build a public app with developer projects.",
+  allowedUrls: [
+    "https://api.hubapi.com",
+    "https://6c67eb7e-ee23-440c-9c55-243cc7befe27.trayapp.io/",
+    "https://api.zippopotam.us/us/33162",
+    "https://faux-api.com/api/v1/stripepostcall_47310498837966186",
+    "https://api.restful-api.dev/objects"
+  ],
+  auth: {
+    redirectUrls: ["http://localhost:3000/oauth-callback"],
+    requiredScopes: [
+      "crm.objects.deals.read",
+      "crm.objects.deals.write",
+      "crm.objects.contacts.read",
+      "crm.objects.contacts.write"
+    ],
+    optionalScopes: [],
+    conditionallyRequiredScopes: []
+  },
+  support: {
+    supportEmail: "support@example.com",
+    documentationUrl: "https://example.com/docs",
+    supportUrl: "https://example.com/support",
+    supportPhone: "+18005555555"
+  },
+  extensions: {
+    crm: {
+      cards: [
+        {
+          file: "./extensions/example-card.json"
+        }
+      ]
+    }
+  },
+  webhooks: {
+    file: "./webhooks/webhooks.json"
+  }
+};
+
+// Write the content to a JSON file
+fs.writeFile('config.json', JSON.stringify(fileContent, null, 2), (err) => {
+  if (err) {
+    console.error('Error writing file:', err);
+    return;
+  }
+  console.log('File created successfully as config.json');
+});
+
