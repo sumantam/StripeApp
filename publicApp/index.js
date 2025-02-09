@@ -7,6 +7,7 @@ const open = require('open');
 const os = require('os');
 const fs = require('fs');
 const https = require('https');
+const path = require('path');
 //const open = require('open').default
 //const { default: open } = require('open');
 const app = express();
@@ -83,7 +84,7 @@ app.get('/install', (req, res) => {
     conditionallyRequiredScopes: []
   };
 
-  createFileContent(authConfig);
+  // createFileContent(authConfig);
 
 });
 
@@ -97,6 +98,18 @@ app.get('/install', (req, res) => {
 // and process it based on the query parameters that are passed
 app.get('/oauth-callback', async (req, res) => {
   console.log('===> Step 3: Handling the request sent by the server');
+  res.setHeader('Content-Type', 'text/html');
+  res.write(`<h2>HubSpot OAuth 2.0 Access Token</h2>`);
+  //if (isAuthorized(req.sessionID)) {
+  console.log("Is Authorized ", isAuthorized(req.sessionID));
+  const accessToken = await getAccessToken(req.sessionID);
+  if (accessToken) {
+    const contact = await getContact(accessToken);
+    res.write(`<h4>Access token: ${accessToken}</h4>`);
+    //displayContactName(res, contact);
+  } else {
+    res.write(`<a href="/install"><h3> No Access Token</h3></a>`);
+  }
 });
 
 //==========================================//
@@ -248,12 +261,26 @@ const createFileContent = (authConfig) => {
     }
   };
   // Write the content to a JSON file
-  fs.writeFile('config.json', JSON.stringify(fileContent, null, 2), (err) => {
+
+  fs.writeFile('public-app.json', JSON.stringify(fileContent, null, 2), (err) => {
     if (err) {
       console.error('Error writing file:', err);
       return;
     }
     console.log('File created successfully as config.json');
+    const currentDir = process.cwd();
+    // Define source and destination paths relative to the current working directory
+    const sourcePath = path.join(currentDir, 'public-app.json');
+    const destinationDir = path.join(currentDir, '../StripeRefund/src/app');
+    const destinationPath = path.join(destinationDir, 'public-app.json');
+	  console.log(" Source Path ", sourcePath, " Destination Path " , destinationPath);
+    fs.rename(sourcePath, destinationPath, (renameErr) => {
+      if (renameErr) {
+        console.error('Error moving file:', renameErr);
+      } else {
+        console.log('File moved successfully!');
+      }
+    });
   });
 }
 
